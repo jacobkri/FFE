@@ -13,7 +13,7 @@ $template = <<<LOADTEMPLATE
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="{$this->HTML_CONTENT['description']}">
 
-    <title>{$this->HTML_CONTENT['website_title']}</title>
+    <title>{$this->HTML_CONTENT['title']}</title>
     <link rel="stylesheet" href="templates/default/main.css" type="text/css">
     <link rel="stylesheet" href="fonts/open-sans.css" type="text/css">
     <link rel="stylesheet" href="fonts/roboto.css" type="text/css">

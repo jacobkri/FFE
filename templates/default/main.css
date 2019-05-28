@@ -3,7 +3,7 @@
 /* prettier-ignore */
 #ffe_main h1, #ffe_main h2, #ffe_main h3, #ffe_main h4, #ffe_main h5, #ffe_main h6 {
   /* Headings and Paragraphs inside the main container */
-  padding: 0 0 1em;
+  padding: 0 0 1rem;
   font-family: "Roboto", sans-serif;
   color:rgb(44,44,44);
 }
@@ -11,6 +11,8 @@
   padding: 0 0 1em;
   font-family: "Open Sans", sans-serif;
   color: rgb(44, 44, 44);
+  font-size: 1.2rem;
+  line-height: 1.5rem;
 }
 body {
   font-family: "Open Sans", sans-serif;
@@ -73,6 +75,7 @@ footer h2 {
   position: relative;
   top: -5rem;
   padding: 9rem 1rem 0 5rem;
+  min-height: 500px;
 }
 header .text_logo {
   padding: 0.7rem 1rem;
@@ -107,7 +110,7 @@ p {
 }
 .presenter h2 {
   margin: 0 auto;
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(30, 30, 30, 0.2);
   padding: 0.5rem !important;
   box-sizing: border-box;
   border-radius: 0.4rem;
@@ -117,7 +120,7 @@ p {
   position: absolute;
   bottom: 2rem;
   left: 2rem;
-  color: rgb(30, 30, 30);
+  color: rgba(255, 255, 255);
 }
 
 /* Multimedia */
