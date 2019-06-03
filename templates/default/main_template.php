@@ -49,7 +49,9 @@ $template = <<<LOADTEMPLATE
       </div>
       <p id="admin_link" class="width_control"><a href="wordpress/wp-admin">Admin</a></p>
     </footer>
+    <script src="runner.js"></script>
   </body>
+  
  </html>
  
 LOADTEMPLATE;

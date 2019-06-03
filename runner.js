@@ -1,7 +1,14 @@
-/*
+
 
 document.addEventListener("DOMContentLoaded", main);
 
+
+function main() {
+
+}
+
+
+/*
 function main() {
   // Find all entities on the contact page, and apply the random rotation effect
   let persons = document.querySelectorAll(".person .details");
