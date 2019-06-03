@@ -2,7 +2,6 @@
 // Main template file
 // Contains the standard HTML parts for all pages,
 // such as: <!doctype html>, <html>, <head>, <body>. Etc.
-$requested_uri_clean = strtok($_SERVER["REQUEST_URI"],'?');
 
 $template = <<<LOADTEMPLATE
 <!doctype html>
@@ -17,7 +16,7 @@ $template = <<<LOADTEMPLATE
     <link rel="stylesheet" href="templates/default/main.css" type="text/css">
     <link rel="stylesheet" href="fonts/open-sans.css" type="text/css">
     <link rel="stylesheet" href="fonts/roboto.css" type="text/css">
-
+    
   </head>
 
   <body>
@@ -30,13 +29,7 @@ $template = <<<LOADTEMPLATE
          </p>
         </div>
 
-        <nav>
-          <ol>
-          <li><a href="{$requested_uri_clean}">Forsiden</a></li>
-          <li><a href="?page=maalgruppe">Målgruppe</a></li>
-          <li><a href="?page=kontakt">Kontakt</a></li>
-          </ol>
-        </nav>
+      {$this->HTML_CONTENT['navigation']}
       </div>
     </header>
 
@@ -57,7 +50,6 @@ $template = <<<LOADTEMPLATE
       <p id="admin_link" class="width_control"><a href="wordpress/wp-admin">Admin</a></p>
     </footer>
   </body>
-
  </html>
  
 LOADTEMPLATE;

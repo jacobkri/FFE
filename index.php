@@ -6,7 +6,7 @@
 //
 //         To-do:
 //           Dynamically load posts on the frontpage
-//           Create the page for målgruppe
+//           Load by slug instead of post IDs
 //           Add error pages and dynamic loading of normal Wordpress posts
 //
 // ✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨
@@ -57,6 +57,7 @@ class wp_frontend {
     $this->region_links(); // Can be used in the global site-footer
     $this->SoMe_links(); // Can be used in the global site-footer
     $this->load_address(); // Address-box containing the address for the owner/entity
+    $this->build_navigation(); // Create the navigation menu using the "pages" post-type from wordpress back-end
     $this->HTML_CONTENT['website_title'] = get_option('blogname'); // Get the site name from Wordpress options
   }
 
@@ -72,29 +73,38 @@ class wp_frontend {
       $this->req_page = 'frontpage'; // Assume the frontpage is requested if the page-parameter is empty
     }
   }
-  public function load_content($post_id) {
-    // Here's some $post properties: post_date * post_date_gmt * post_content * post_title
-    $post = get_post($post_id);
+  private function load_content_by_name($post_name, $post_type='page') {
+    // Wordpress does not seem to have a simple way to fetch a page by post_name
+    $post = null;
 
+    if ( $posts = get_posts( array( 
+        'name' => $post_name, 
+        'post_type' => $post_type,
+        'post_status' => 'publish',
+        'posts_per_page' => 1
+    ) ) ) $post = $posts[0];
+    
+    // Now, we can do something with $found_post
     if ($post!==null) {
-      $returned_content = array('thumbnail' => '');
-
-      $returned_content['post_title'] = $post->post_title;
-      $returned_content['post_date']    = $post->post_date; // Needed for HTTP headers - implement this later!
-      $returned_content['post_content'] = $post->post_content;
-
-      $thumbnail = get_the_post_thumbnail_url($post_id); // Maybe better than using ACF, just figure out how to load alt text before using on kontakt
-      if ($thumbnail) {
-        $returned_content['thumbnail'] = $thumbnail;
-      }
-
-      return $returned_content;
-
+      return $this->return_found_post($post);
     } else {
       return false;
     }
   }
-  public function SoMe_links() {
+  private function load_content($post_id) {
+    // Here's some $post properties: post_date * post_date_gmt * post_content * post_title
+    $post = get_post($post_id);
+
+
+    // If a post was found, return the content
+    if ($post!==null) {
+      return $this->return_found_post($post);
+    } else {
+      return false;
+    }
+
+  }
+  private function SoMe_links() {
     $wp_result = get_posts(array(
       'post_type'   => 'some_link',
       'numberposts' => '-1')); // Load posts of type "kontakt"
@@ -123,7 +133,44 @@ class wp_frontend {
      $this->HTML_CONTENT['SoMe_link_section'] = ''; // If no SoMe links found, this should be empty!
     }
   }
-  public function region_links() {
+  private function build_navigation() {
+    $candidates = get_pages(array('exclude' => array(3))); // Exclude Privacy Policy (3)
+
+
+    require BASE_PATH .'templates/default/navigation_template.php'; // Load relevant HTML from template
+    $placeholders = array("[PLACEHOLDER=post_name]", "[PLACEHOLDER=link_titel]", "[PLACEHOLDER=thumbnail]");
+    $html_slices = ''; // A string of updated HTML for later use
+
+    // First identify which pages should be included, using post_name as key
+    foreach($candidates as &$candidate) {
+      $include_in_navigation_field = get_field('navigation', $candidate->ID);
+      $link_titel_field = get_field('link_titel', $candidate->ID);
+
+      // If the page should be included in the navigation
+      if((!empty($include_in_navigation_field[0])) && ($this->req_page !== $candidate->post_name)) {
+        // Fetch thumbnail (if any)
+        $thumbnail = get_the_post_thumbnail_url($candidate->ID);
+        if ($thumbnail) {
+          $thumbnail = $thumbnail;
+        } else {$thumbnail = '';}
+
+        // Add short title if available
+        if (!empty($link_titel_field)) {
+          $link_titel = $link_titel_field;
+        } else {
+          $link_titel = $candidate->post_title;
+        }
+
+        // Include the link
+        $replacements = array($candidate->post_name, $link_titel, $thumbnail);
+        $html_slices .= str_replace($placeholders, $replacements, $navigation_template);
+     }
+    }
+    $for_main_html = str_replace('[REPEATED]', $html_slices, $navigation_container); // Add the container element
+
+    $this->HTML_CONTENT['navigation'] = $for_main_html;
+  }
+  private function region_links() {
     $wp_result = get_posts(array(
       'post_type'   => 'region',
       'numberposts' => '-1')); // Load posts of type "kontakt"
@@ -136,7 +183,7 @@ class wp_frontend {
       foreach($wp_result as &$unit) { // Update $html_slices with template & data from Wordpress back-end
         $region_link = get_field('url', $unit->ID);
         $replacements = array($unit->post_title, $region_link);
-        $html_slices .= str_replace($placeholders, $replacements, $region_template); // Add & Replace "Kontakt"
+        $html_slices .= str_replace($placeholders, $replacements, $region_template);
       }
       $for_main_html = str_replace('[REPEATED]', $html_slices, $region_container); // Add the container element
 
@@ -145,7 +192,7 @@ class wp_frontend {
       $this->HTML_CONTENT['region_section'] = '';
     }
   }
-  public function load_address() {
+  private function load_address() {
     // Load the address box
     $post_content = $this->load_content($this->post_ids['address_info']);
     $this->HTML_CONTENT['address_section'] = $post_content['post_content'];
@@ -160,8 +207,6 @@ class wp_frontend {
     $this->HTML_CONTENT['presenter'] = $presenter_template;
   }
   public function show_page() {
-    // $wp_page = $this->loadJson($this->completed_URL); // Attempt to load the requested page
-
         // First we check if requested page was one of the "special" pages with extra dynamic content
         // Other pages are loaded normally, without adding extra content to the HTML.
         if ($this->req_page == 'kontakt') {
@@ -217,6 +262,13 @@ class wp_frontend {
           $this->HTML_CONTENT['title'] = '400 - Ugyldig Anmodning | ' . $this->HTML_CONTENT['website_title'];
           $this->HTML_CONTENT['description'] = 'Anmodningen var enten ugyldig eller ikke accepteret.';
           $this->HTML_CONTENT['main_content'] = '<p>Ugyldig Anmodning</p>';
+        } else {
+          $post_content = $this->load_content_by_name($this->req_page);
+
+          $this->HTML_CONTENT['title'] = $post_content['post_title'] . ' | ' . $this->HTML_CONTENT['website_title'];
+          $this->HTML_CONTENT['main_content'] = $post_content['post_content'];
+          $this->HTML_CONTENT['description'] = get_field('description', $post_content['ID']);
+          $this->load_presenter($post_content); // Load the presenter template with $post_content
         }
 
     
@@ -226,6 +278,22 @@ class wp_frontend {
     require BASE_PATH .'templates/default/main_template.php'; // Load and fill out the HTML template
     header('Content-Type: text/html; charset=utf-8'); // Required HTTP header for UTF-8 character set and HTML mime-type
     echo $template; // Send the HTML to the browser
+  }
+
+  private function return_found_post($post) {
+    $post_id = $post->ID;
+
+    $returned_content = array('thumbnail' => '');
+    $returned_content['ID'] = $post->ID;
+    $returned_content['post_title'] = $post->post_title;
+    $returned_content['post_date']    = $post->post_date; // Needed for HTTP headers - implement this later!
+    $returned_content['post_content'] = $post->post_content;
+
+    $thumbnail = get_the_post_thumbnail_url($post_id); // Maybe better than using ACF, just figure out how to load alt text before using on kontakt
+    if ($thumbnail) {
+      $returned_content['thumbnail'] = $thumbnail;
+    }
+    return $returned_content;
   }
   
   public function loadJson($url) {
