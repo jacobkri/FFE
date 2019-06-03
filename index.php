@@ -134,7 +134,11 @@ class wp_frontend {
     }
   }
   private function build_navigation() {
-    $candidates = get_pages(array('exclude' => array(3))); // Exclude Privacy Policy (3)
+    $candidates = get_pages(array(
+    'exclude' => array(3),  // Exclude Privacy Policy (3)
+    'sort_order' => 'asc',
+    'sort_column' => 'ID')
+  );
 
 
     require BASE_PATH .'templates/default/navigation_template.php'; // Load relevant HTML from template
