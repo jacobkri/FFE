@@ -23,7 +23,6 @@
 body {
   font-family: "Open Sans", sans-serif;
 }
-
 header {
   width: 100%;
   position: relative;
@@ -108,8 +107,7 @@ p {
   line-height: 1.6rem;
 }
 .presenter {
-  min-height: 30vh;
-  max-height: 35vh;
+  height:15rem;
   overflow: hidden;
   /* Background is loaded inline in the wp_frontend class from wordpress */
   background-attachment: fixed;
@@ -119,6 +117,7 @@ p {
 }
 .presenter img {
   width: 100vw;
+  min-width:fit-content;
 }
 .presenter h2 {
   margin: 0 auto;
@@ -128,7 +127,7 @@ p {
   border-radius: 0.4rem;
   width: fit-content;
   font-family: "Roboto", sans-serif;
-  font-size: 4rem;
+  font-size: 3rem;
   position: absolute;
   bottom: 2rem;
   left: 2rem;
@@ -247,30 +246,69 @@ header nav ol li a {
 .space_between {
   justify-content: space-between;
 }
+.space_around {
+  justify-content: space-around;
+}
 footer .flexbox .flexer {
   flex-basis: 49%;
 }
 
 /* Links */
 #ffe_main,
-footer a:link {
-  color: #83a700;
-}
+footer a:link {color:#83a700;}
 #ffe_main,
-footer a:visited {
-  color: #83a700;
-}
+footer a:visited {color:#83a700;}
 #ffe_main,
-footer a:hover {
-  color: #000;
-}
+footer a:hover {color:#000;}
 #ffe_main,
-footer a:active {
-  color: #83a700;
-}
-#admin_link {
-  margin: 4rem auto 2rem;
-}
+footer a:active {color:#83a700;}
+#admin_link {margin:4rem auto 2rem;}
+
+
+/* YouTube videos */
+.iframe-container {overflow:hidden;position:relative;margin:1rem;width:50%;float:right;}
+.iframe-container iframe {width:100%;min-width:300px;}
+
+/* For responsive <video> elements */
+.video_container {margin:0 auto;width:50%;float:right;}
+video {width:100%;min-width:300px;margin:1rem;}
+
+#video_content {padding:1rem;}
+
+/* xxx_list_template's */
+#video_list {list-style-type:none;min-width:300px;max-width:50%;float:left;}
+#video_list li {flex-basis:300px;margin:0 1rem 0 0;}
+#video_list a,#post_list a {text-decoration:none;color:#000;display:block;}
+#video_list a:hover, #post_list a:hover {color:#7cbe00;}
+.video_li_title {padding:1.5rem 0;top:-1rem}
+.post_li_title, .video_li_title {font-weight:bold;font-family: "Roboto", sans-serif;background:#fff;position:relative;z-index:1;} 
+.post_li_title {font-size:1.5rem;padding:0.2rem 0;}
+.video_thumb, .thumb_box {min-width:200px;width:100%;max-height:280px;}
+.thumb_box {overflow:hidden;position:relative;}
+.video_thumb,.post_thumb {transition: transform .2s;}
+.video_thumb:hover,.post_thumb:hover {transform: scale(1.1);}
+#post_list {list-style-type:none;padding:2rem 0;clear:both;}
+#post_list img {width:100%;}
+#post_list li {flex-basis:500px;}
+
+header button {border:0;width:2.3rem;height:2.3rem;font-size:2.3rem;background:none;}
+header button:hover {color:#fff;}
+
+/* WYSIWYG specific styling */
+blockquote {padding:1rem;font-style:italic;background:rgb(249,249,249);border-radius: 0.5rem;margin:0 0 1rem;}
+blockquote cite, figcaption {padding:1rem;color:rgb(94, 94, 94);font-style:italic;}
+blockquote cite:before {content:"–";}
+
+
+.wp-block-image img {display:block;}
+.aligncenter {clear:both;display:block;margin-left:auto;margin-right:auto;width:fit-content;}
+.alignright {float:right;margin-left:1rem;width:fit-content;}
+.alignleft {float:left;margin-right:1rem;width:fit-content;}
+
+
+/* Other things */
+
+.video_play_symbol {position:absolute;top:0.2rem;padding:0 0.5rem;text-align:right;width:100%;height:3.3rem;right:0.2rem;font-size:3rem;user-select:none;-ms-user-select:none;-moz-user-select:none;-webkit-user-select:none;pointer-events:none;z-index:2;}
 
 @media screen and (max-width: 1200px) {
   header nav ol {
@@ -288,6 +326,7 @@ footer a:active {
 }
 
 @media screen and (max-width: 900px) {
+  .kontakt_container {justify-content: space-around;}
   header nav {
     height: 1rem;
     overflow: hidden;
@@ -304,9 +343,13 @@ footer a:active {
     display: block;
   }
   .presenter h2 {
-    font-size: 7vw;
-    bottom: 0;
-    left: 1vw;
+    font-size: 5vw;
+    bottom: 1rem;
+    left: 1rem;
     padding: 0;
   }
+  #video_list,#post_list {float:none;margin:0 auto;}
+  #video_list li,#post_list li {flex-basis:auto;margin:0;}
+  .iframe-container,.video_container {float:none;width:100%;}
+  #post_list {width:100%;}
 }

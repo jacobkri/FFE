@@ -5,9 +5,10 @@
 //          Made by Jacob Kristensen (jacobseated.com)
 //
 //         To-do:
-//           Dynamically load posts on the frontpage
-//           Load by slug instead of post IDs
+//           Load by post_name's instead of post IDs (No hard-coded ids should exist in the code)
 //           Add error pages and dynamic loading of normal Wordpress posts
+//           Perform DRY clean-up!
+//           We might need to load wp styles to use the WYSIWYG features
 //
 // ✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨
 
@@ -32,7 +33,6 @@ $wp_frontend->show_page(); // Show the requested page
 
 class wp_frontend {
   private $post_ids = array(); // Once a page is created in wordpress, its ID should be stored here, if needed. I.e. The kontakt page.
-  private $completed_URL; // (string) Build from API_URL ... Etc..
 
   public $HTML_CONTENT = array(); // Content for the main template
   public $req_page; // (string) Requested page name
@@ -50,6 +50,7 @@ class wp_frontend {
 
     $this->HTML_CONTENT['main_content'] = ''; // Default value (Some pages might not have static cotnent)
     $this->HTML_CONTENT['description'] = ''; // All pages should have a meta description, this is just a fall-back value.. Do not hard-code a description here!
+    $this->HTML_CONTENT['wp_styles'] = get_stylesheet_uri();
 
     $this->requested_page(); // Figure out which page was requested
 
@@ -73,9 +74,24 @@ class wp_frontend {
       $this->req_page = 'frontpage'; // Assume the frontpage is requested if the page-parameter is empty
     }
   }
-  private function load_content_by_name($post_name, $post_type='page') {
+  private function load_content_by_name($post_name) {
     // Wordpress does not seem to have a simple way to fetch a page by post_name
     $post = null;
+
+    if(empty($_GET['type'])) {
+      $post_type = 'page'; // Assume a "page" post type was requested
+    } else {
+      // If the type was declared via parameters, validate it before moving on!
+      if (preg_match("|^[a-z0-9_-]+$|i", $_GET['type'])) {
+        $post_type = $_GET['type']; // Set the post_type for get_posts()
+      } else {
+        http_response_code(400); // Set the response code
+        $this->HTML_CONTENT['title'] = '400 - Ugyldig Anmodning | ' . $this->HTML_CONTENT['website_title'];
+        $this->HTML_CONTENT['description'] = 'Anmodningen var enten ugyldig eller ikke accepteret.';
+        $this->HTML_CONTENT['main_content'] = '<p>Ugyldig Anmodning</p>';
+        $this->respond();
+      }
+    }
 
     if ( $posts = get_posts( array( 
         'name' => $post_name, 
@@ -196,19 +212,74 @@ class wp_frontend {
       $this->HTML_CONTENT['region_section'] = '';
     }
   }
+  private function fetch_videos() {
+    // Loads videos on the frontpage
+    $wp_result = get_posts(array(
+      'post_type'   => 'video',
+      'orderby'     => 'date',
+      'order'       => 'DESC',
+      'numberposts' => '6'));
+
+      require BASE_PATH .'templates/default/video_list_template.php'; // Load relevant HTML from template
+      $placeholders = array("[PLACEHOLDER=video_title]", "[PLACEHOLDER=video_url]", "[PLACEHOLDER=video_thumbnail]");
+      $html_slices = '';
+      foreach ($wp_result as &$video) {
+        // $custom_fields = get_fields($video->ID, false);
+        // $video = get_field('video', $video->ID);
+
+        $thumbnail = get_the_post_thumbnail_url($video->ID);
+        if (empty($thumbnail)) {
+          $thumbnail = 'templates/default/missing-video-thumbnail.png'; // Load a defult thumbnail from the template if not uploaded
+        }
+        
+        $replacements = array($video->post_title, $video->post_name, $thumbnail);
+        $html_slices .= str_replace($placeholders, $replacements, $video_li_template);
+      }
+      return str_replace('[REPEATED]', $html_slices, $video_list_container);
+  }
+  private function fetch_blog_posts() {
+        // Loads videos on the frontpage
+    $wp_result = get_posts(array(
+      'post_type'   => 'post',
+      'orderby'     => 'date',
+      'order'       => 'DESC',
+      'numberposts' => '6'));
+
+      require BASE_PATH .'templates/default/post_list_template.php'; // Load relevant HTML from template
+      $placeholders = array("[PLACEHOLDER=post_title]", "[PLACEHOLDER=post_url]", "[PLACEHOLDER=post_thumbnail]");
+      $html_slices = '';
+      foreach ($wp_result as &$post) {
+        // $custom_fields = get_fields($video->ID, false);
+        // $video = get_field('video', $video->ID);
+
+        $thumbnail = get_the_post_thumbnail_url($post->ID);
+        if (empty($thumbnail)) {
+          $thumbnail = 'templates/default/missing-post-thumbnail.png'; // Load a defult thumbnail from the template if not uploaded
+        }
+        
+        $replacements = array($post->post_title, $post->post_name, $thumbnail);
+        $html_slices .= str_replace($placeholders, $replacements, $post_li_template);
+      }
+      return str_replace('[REPEATED]', $html_slices, $post_list_container);
+  }
   private function load_address() {
     // Load the address box
     $post_content = $this->load_content($this->post_ids['address_info']);
     $this->HTML_CONTENT['address_section'] = $post_content['post_content'];
     $this->HTML_CONTENT['address_bgimage'] = "background-image:url('".$post_content['thumbnail']."');";
   }
-  private function load_presenter($post_content) {
+  private function load_presenter($post_content=false) {
+    if ($post_content!==false) {
     $this->HTML_CONTENT['presenter_title'] = $post_content['post_title'];
     $this->HTML_CONTENT['presenter_image'] = $post_content['thumbnail'];
-
+    } else {
+      $this->HTML_CONTENT['presenter_title'] = $this->HTML_CONTENT['title'];
+      $this->HTML_CONTENT['presenter_image'] = 'templates/default/missing-thumbnail.png';
+    }
     // The Presenter typically contains a background-image and a h1 heading with the title of the page
     require BASE_PATH .'templates/default/presenter_template.php';
     $this->HTML_CONTENT['presenter'] = $presenter_template;
+    
   }
   public function show_page() {
         // First we check if requested page was one of the "special" pages with extra dynamic content
@@ -256,9 +327,14 @@ class wp_frontend {
 
           $this->HTML_CONTENT['title'] = $post_content['post_title'] . ' | ' . $this->HTML_CONTENT['website_title'];
           $this->HTML_CONTENT['description'] = get_field('description', $this->post_ids['frontpage_content']);
-          $this->HTML_CONTENT['main_content'] = $post_content['post_content'];
 
-          $this->load_presenter($post_content); // Load the presenter template with $post_content
+          $for_main_html = $this->fetch_videos();
+          $this->HTML_CONTENT['main_content'] = $for_main_html . $post_content['post_content'];
+          $this->HTML_CONTENT['main_content'] .= $this->fetch_blog_posts();
+
+          
+
+          $this->load_presenter($post_content);
         } else if ($this->req_page == 400) {
           // $post_content = $this->load_content($this->post_ids['400_bad_request']);
           // $this->load_presenter($post_content);
@@ -269,19 +345,46 @@ class wp_frontend {
         } else {
           $post_content = $this->load_content_by_name($this->req_page);
 
-          $this->HTML_CONTENT['title'] = $post_content['post_title'] . ' | ' . $this->HTML_CONTENT['website_title'];
-          $this->HTML_CONTENT['main_content'] = $post_content['post_content'];
-          $this->HTML_CONTENT['description'] = get_field('description', $post_content['ID']);
-          $this->load_presenter($post_content); // Load the presenter template with $post_content
-        }
+          if ($post_content==false) { // Check if something was returned, otherwise assume we got a 404
+            http_response_code(404);
+            $this->HTML_CONTENT['title'] = '404 - Ikke Fundet | ' . $this->HTML_CONTENT['website_title'];
+            $this->HTML_CONTENT['description'] = 'Siden blev ikke fundet. Tjek om du har skrevet navnet korrekt.';
+            $this->HTML_CONTENT['main_content'] = '<p>Siden blev ikke fundet. Tjek om du har skrevet navnet korrekt.</p>';
+            $this->load_presenter();
+            $this->respond(); // Send output to client!
+          }
 
-    
+          // Check if there's a video attached (Only video type posts)
+            if ($_GET['type'] == 'video') {
+              $video = get_field('youtube_video', $post_content['ID']);
+
+              if ($video) {
+                // $video = preg_replace(array('/width="[0-9]+"/', '/height="[0-9]+"/'), array('',''), $video); // Bad idea to remove these attributes!
+                $this->HTML_CONTENT['youtube_video'] = $video; // Add YouTube code
+              } else {
+                $video = get_field('video', $post_content['ID']); // Assume we are dealing with a self-hosted video
+                if ($video) {
+                  $this->HTML_CONTENT['video_url'] = $video['url'];
+                }
+              }
+
+            }
+
+            $this->HTML_CONTENT['title'] = $post_content['post_title'] . ' | ' . $this->HTML_CONTENT['website_title'];
+            $this->HTML_CONTENT['main_content'] .= $post_content['post_content'];
+            $this->HTML_CONTENT['description'] = get_field('description', $post_content['ID']);
+            $this->load_presenter($post_content); // Load the presenter template with $post_content
+        }
+    $this->respond(); // Send output to client!
+  }
+  private function respond() {
     // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> OUTPUT :-D
     // >>> Show Content >>>>>>>>>>>>>>>>>> OUTPUT :-D
     // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> OUTPUT :-D
     require BASE_PATH .'templates/default/main_template.php'; // Load and fill out the HTML template
     header('Content-Type: text/html; charset=utf-8'); // Required HTTP header for UTF-8 character set and HTML mime-type
     echo $template; // Send the HTML to the browser
+    exit();
   }
 
   private function return_found_post($post) {
@@ -296,6 +399,8 @@ class wp_frontend {
     $thumbnail = get_the_post_thumbnail_url($post_id); // Maybe better than using ACF, just figure out how to load alt text before using on kontakt
     if ($thumbnail) {
       $returned_content['thumbnail'] = $thumbnail;
+    } else {
+      $returned_content['thumbnail'] = 'templates/default/missing-thumbnail.png';
     }
     return $returned_content;
   }

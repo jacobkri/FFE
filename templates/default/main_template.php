@@ -3,6 +3,23 @@
 // Contains the standard HTML parts for all pages,
 // such as: <!doctype html>, <html>, <head>, <body>. Etc.
 
+if ($_GET['type'] == 'video') {
+  if (!empty($this->HTML_CONTENT['youtube_video'])) {
+  // iframe-container required for responsive CSS hack
+  $this->HTML_CONTENT['main_content'] = '<div class="iframe-container">' . $this->HTML_CONTENT['youtube_video'] . '</div><div id="video_content">' . $this->HTML_CONTENT['main_content'] . '</div>';
+  } else { // Assume we are dealing with a self-hosted video
+    if (!empty($this->HTML_CONTENT['video_url'])) {
+    $video_HTML = '
+    <video controls="controls">
+      <source src="'.$this->HTML_CONTENT['video_url'].'" type="video/mp4">
+    </video>';
+    } else {$video_HTML = '';}
+
+    $this->HTML_CONTENT['main_content'] = $video_HTML . '<div id="video_content">' .$this->HTML_CONTENT['main_content'] . '</div>';
+  }
+  
+}
+
 $template = <<<LOADTEMPLATE
 <!doctype html>
 <html lang="da">
@@ -16,7 +33,7 @@ $template = <<<LOADTEMPLATE
     <link rel="stylesheet" href="templates/default/main.css" type="text/css">
     <link rel="stylesheet" href="fonts/open-sans.css" type="text/css">
     <link rel="stylesheet" href="fonts/roboto.css" type="text/css">
-    
+    <link rel="shortcut icon" href="favicon.ico">
   </head>
 
   <body>
