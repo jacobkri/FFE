@@ -180,16 +180,7 @@ p {
   box-sizing: border-box;
   border-radius: 0.4rem;
 }
-
-/* Site menu */
-#nav_burger {
-  position: absolute;
-  top: 0;
-  right: 0;
-  display: none;
-  z-index: 1;
-} /* Initial value. Should only be shown when needed */
-header nav ol {
+.nav_standard ol {
   position: absolute;
   right: 0;
   top: -1rem;
@@ -198,7 +189,7 @@ header nav ol {
   list-style: none;
   z-index: 1;
 }
-header nav ol li {
+.nav_standard ol li {
   /*  border: 0.3rem solid rgba(0, 0, 0, 0.1); */
   width: 9rem;
   height: 3rem;
@@ -210,13 +201,13 @@ header nav ol li {
   border-radius: 0.2rem;
   font-weight: bold;
 }
-header nav ol li:hover {
+.nav_standard ol li:hover {
   height: 4rem;
   transition: height 0.5s, border-color 0.5s, background 0.5s;
   border-color: rgba(0, 0, 0, 0.8);
   background: rgba(0, 0, 0, 0.8);
 }
-header nav ol li a {
+.nav_standard ol li a {
   text-decoration: none;
   padding: 1.5rem 0 2.4rem 0 !important;
   display: block;
@@ -278,7 +269,7 @@ video {width:100%;min-width:300px;margin:1rem;}
 /* xxx_list_template's */
 #video_list {list-style-type:none;min-width:300px;max-width:50%;float:left;}
 #video_list li {flex-basis:300px;margin:0 1rem 0 0;}
-#video_list a,#post_list a {text-decoration:none;color:#000;display:block;}
+#video_list a,#post_list a {text-decoration:none;color:#000;display:block;position:relative;}
 #video_list a:hover, #post_list a:hover {color:#7cbe00;}
 .video_li_title {padding:1.5rem 0;top:-1rem}
 .post_li_title, .video_li_title {font-weight:bold;font-family: "Roboto", sans-serif;background:#fff;position:relative;z-index:1;} 
@@ -291,9 +282,6 @@ video {width:100%;min-width:300px;margin:1rem;}
 #post_list img {width:100%;}
 #post_list li {flex-basis:500px;}
 
-header button {border:0;width:2.3rem;height:2.3rem;font-size:2.3rem;background:none;}
-header button:hover {color:#fff;}
-
 /* WYSIWYG specific styling */
 blockquote {padding:1rem;font-style:italic;background:rgb(249,249,249);border-radius: 0.5rem;margin:0 0 1rem;}
 blockquote cite, figcaption {padding:1rem;color:rgb(94, 94, 94);font-style:italic;}
@@ -305,13 +293,25 @@ blockquote cite:before {content:"–";}
 .alignright {float:right;margin-left:1rem;width:fit-content;}
 .alignleft {float:left;margin-right:1rem;width:fit-content;}
 
+/* Site menu */
+#nav_burger {
+  position:absolute;top:0;right:0;display:none;z-index:3;
+  border:0;width:2.3rem;height:2.3rem;font-size:2.3rem;background:none;outline:none;}
+#nav_burger:hover {color:#fff;cursor:pointer;}
 
-/* Other things */
+#burger_presenter {height:100vh;position:absolute;top:0;left:0;width:100%;background-size:cover;background-repeat:no-repeat;display:none;}
 
-.video_play_symbol {position:absolute;top:0.2rem;padding:0 0.5rem;text-align:right;width:100%;height:3.3rem;right:0.2rem;font-size:3rem;user-select:none;-ms-user-select:none;-moz-user-select:none;-webkit-user-select:none;pointer-events:none;z-index:2;}
+/* JS show_menu rules */
+.show_menu {position:absolute;top:0;left:0;bottom:0;right:0;width:100vw;min-height:100vh;background:rgb(245, 245, 245);z-index: 3;}
+.show_menu ol {display:block;margin:0 auto;position:relative;z-index:2;}
+.show_menu ol li {margin:1rem;padding:0;display:block;height:auto;}
+.show_menu ol li a {color:#000;background:#bee52e;border-radius:0.5rem;padding:1rem;margin:0 auto;display:block;width:8rem;text-decoration:none;font-weight:bold;font-family: "Roboto", sans-serif;text-align:center;transition: background-color, 0.4s, color 0.4s;}
+.show_menu ol li a:hover {background:#000;color:#fff;}
+
+.video_play_symbol {position:absolute;top:0.2rem;padding:0 0.5rem;text-align:right;width:100%;height:3.3rem;right:0.2rem;font-size:3rem;user-select:none;-ms-user-select:none;-moz-user-select:none;-webkit-user-select:none;z-index:2;}
 
 @media screen and (max-width: 1200px) {
-  header nav ol {
+  .nav_standard ol {
     font-size: 0.9rem;
   }
   header .text_logo {
@@ -325,23 +325,27 @@ blockquote cite:before {content:"–";}
   }
 }
 
-@media screen and (max-width: 900px) {
-  .kontakt_container {justify-content: space-around;}
-  header nav {
+@media screen and (max-width: 1662px) {
+  #video_list li {flex-basis:auto;}
+  #video_list {justify-content:space-around;}
+}
+
+@media screen and (max-width: 1200px) {
+  .nav_standard {
     height: 1rem;
     overflow: hidden;
   }
-  header nav ol {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    top: 1rem;
-    display: block;
+  .nav_standard ol {
+    display: none;
     flex-wrap: initial;
   }
   #nav_burger {
     display: block;
   }
+}
+
+@media screen and (max-width: 900px) {
+  .kontakt_container {justify-content:space-around;}
   .presenter h2 {
     font-size: 5vw;
     bottom: 1rem;
@@ -351,5 +355,5 @@ blockquote cite:before {content:"–";}
   #video_list,#post_list {float:none;margin:0 auto;}
   #video_list li,#post_list li {flex-basis:auto;margin:0;}
   .iframe-container,.video_container {float:none;width:100%;}
-  #post_list {width:100%;}
+  #post_list, #video_list {width:100%;max-width:100%;}
 }
